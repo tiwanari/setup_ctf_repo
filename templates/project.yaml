@@ -1,0 +1,7 @@
+# template for project
+name: main
+columns:
+  todo: TODO
+  doing: Doing
+  not_assigned: Not Assigned
+  solved: Solved

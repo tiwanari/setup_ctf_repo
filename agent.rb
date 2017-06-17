@@ -25,37 +25,28 @@ class Agent
 
     choose_start_point
 
-    repo = @start == 1 ? create_private_repo : CLI.ask('target repo for CTF? ')
-    target = "#{@username}/#{repo}"
+    repo = if @start <= 1
+             create_private_repo
+           else
+             CLI.ask('repo for CTF (username/repo)? ')
+           end
 
-    setup_labels(target) if @start <= 2
-    setup_project(target) if @start <= 3
+    setup_labels(repo) if @start <= 2
+    setup_project(repo) if @start <= 3
   end
 
   private
 
-  def setup_labels(repo)
-    delete_old_labels! repo
-    labels = YAML.load_file label_file
-    add_labels(repo, labels)
+  def set_resource_folder
+    @res = CLI.ask('resource folder? ') { |q| q.default = 'templates' }
   end
 
-  def setup_project(repo)
-    project = YAML.load_file project_file
-    new_project = create_project(repo, project['name'])
-    add_project_columns(new_project.id, project['columns'])
+  def label_file
+    "#{@res}/#{LABELS}"
   end
 
-  def choose_start_point
-    CLI.choose do |menu|
-      menu.header = 'Start with creating'
-
-      menu.choice(:repository) { @start = 1 }
-      menu.choice(:labels) { @start = 2 }
-      menu.choice(:project) { @start = 3 }
-
-      menu.prompt = 'from where? '
-    end
+  def project_file
+    "#{@res}/#{PROJECT}"
   end
 
   def connect
@@ -76,24 +67,30 @@ class Agent
     raise
   end
 
+  def choose_start_point
+    CLI.choose do |menu|
+      menu.header = 'Start with creating'
+
+      menu.choice(:repository) { @start = 1 }
+      menu.choice(:labels) { @start = 2 }
+      menu.choice(:project) { @start = 3 }
+
+      menu.prompt = 'from where? '
+    end
+  end
+
   def create_private_repo
     repo = CLI.ask 'new repo for CTF? '
     opts = { private: true }
     @logger.info "Creating #{repo}"
     @client.create_repo(repo, opts)
-    repo
+    "#{@username}/#{repo}"
   end
 
-  def set_resource_folder
-    @res = CLI.ask('resource folder? ') { |q| q.default = 'templates' }
-  end
-
-  def label_file
-    "#{@res}/#{LABELS}"
-  end
-
-  def project_file
-    "#{@res}/#{PROJECT}"
+  def setup_labels(repo)
+    delete_old_labels! repo
+    labels = YAML.load_file label_file
+    add_labels(repo, labels)
   end
 
   def delete_old_labels!(repo)
@@ -111,6 +108,12 @@ class Agent
     end
   end
 
+  def setup_project(repo)
+    project = YAML.load_file project_file
+    new_project = create_project(repo, project['name'])
+    add_project_columns(new_project.id, project['columns'])
+  end
+
   def create_project(repo, name)
     @logger.info "Creating a new project (#{name})..."
     @client.create_project(repo, name)
@@ -120,19 +123,6 @@ class Agent
     columns.each do |_, column|
       @logger.info "Adding a new column (#{column})..."
       @client.create_project_column(id, column)
-    end
-  end
-
-  # for debugging
-  def list_repos
-    repos = @client.repositories
-    puts 'Private: '
-    repos.select(&:private).each do |repo|
-      puts "\t- #{repo.full_name}"
-    end
-    puts 'Public: '
-    repos.reject(&:private).each do |repo|
-      puts "\t- #{repo.full_name}"
     end
   end
 end

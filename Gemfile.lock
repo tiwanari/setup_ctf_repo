@@ -3,6 +3,7 @@ GEM
   specs:
     addressable (2.5.1)
       public_suffix (~> 2.0, >= 2.0.2)
+    colorize (0.8.1)
     faraday (0.12.1)
       multipart-post (>= 1.2, < 3)
     highline (1.7.8)
@@ -18,6 +19,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  colorize
   highline
   octokit
 

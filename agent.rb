@@ -56,9 +56,9 @@ class Agent
     @password = CLI.ask('password? ') { |q| q.echo = 'x' }
 
     @client = Octokit::Client.new(login: @username, password: @password)
+    @client.user # Try to fetch
 
-    # Try
-    @logger.info "Logged in user #{@client.user.login}"
+    @logger.info "Logged in user #{@username}"
   rescue Octokit::Unauthorized
     @logger.error 'Wrong username or password'
 

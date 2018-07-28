@@ -3,5 +3,5 @@ name: main
 columns:
   todo: TODO
   doing: Doing
-  not_assigned: Not Assigned
+  not_assigned: Unassigned
   solved: Solved
